@@ -133,14 +133,15 @@ hook.Add("Think", "Hook-MathAsk", function()
         hook.Add("PlayerSay", "Hook-MathAnswer", function(ply, text)
 
             TIMER_ANSWER = 60
-            hook.Add("Think", "Hook-MathQuestion_again", function()
+            timer.Create("math_answer_timer", 1, 0, function()
                 TIMER_ANSWER = TIMER_ANSWER - 1
 
                 if TIMER_ANSWER == 0 then
                     for k, v in pairs(players) do
                         v:ChatPrint(PREFIX .. "Question: " .. a .. " " .. simbol .. " " .. b .. " = ?")
                     end
-
+                    
+                    print("[Math] Question: " .. a .. " " .. simbol .. " " .. b .. " = " .. result)
                     TIMER_ANSWER = 60
                 end
             end)
