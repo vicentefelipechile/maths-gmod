@@ -36,10 +36,21 @@ function mathOnJoin(ply)
         -- player exists
         -- do nothing
     else
-        sql.Query("INSERT into math_points ( name, steamid64, points, success, failed ) VALUES ( " .. sql.SQLStr(ply:Name()) .. ", " .. sql.SQLStr(id64) .. ", 0, 0, 0 );")
+        sql.Query("INSERT into math_points ( name, steamid64, points ) VALUES ( " .. sql.SQLStr(ply:Name()) .. ", " .. sql.SQLStr(id64) .. ", 0 );")
     end
 end
 hook.Add( "PlayerInitialSpawn", "Hook-MathOnJoin", mathOnJoin )
+
+-- on player connected update their name
+function mathUpdateName(ply)
+    local id64 = ply:SteamID64()
+    local row = sql.QueryRow("SELECT * FROM math_points WHERE steamid64 = " .. sql.SQLStr(id64) .. ";")
+
+    if row then
+        -- player exists
+        sql.Query("UPDATE math_points SET name = " .. sql.SQLStr(ply:Name()) .. " WHERE steamid64 = " .. sql.SQLStr(id64) .. ";")
+    end
+end
 
 function mathAddPoints(ply, amount)
     local id64 = ply:SteamID64()
@@ -124,27 +135,20 @@ hook.Add("Think", "Hook-MathAsk", function()
         local formula, simbol, a, b, result = mathAskQuestion()
         local players = player.GetAll()
 
-        for k, v in pairs(players) do
+        for k, v in ipairs(players) do
             v:ChatPrint(PREFIX .. "Question: " .. a .. " " .. simbol .. " " .. b .. " = ?")
         end
 
         print("[Math] Question: " .. a .. " " .. simbol .. " " .. b .. " = " .. result)
 
+
+        timer.Create("math_ask_again", 60, 0, function()
+            for k, v in ipairs(players) do
+                v:ChatPrint(PREFIX .. "Question: " .. a .. " " .. simbol .. " " .. b .. " = ?")
+            end
+        end)
+
         hook.Add("PlayerSay", "Hook-MathAnswer", function(ply, text)
-
-            TIMER_ANSWER = 60
-            timer.Create("math_answer_timer", 1, 0, function()
-                TIMER_ANSWER = TIMER_ANSWER - 1
-
-                if TIMER_ANSWER == 0 then
-                    for k, v in pairs(players) do
-                        v:ChatPrint(PREFIX .. "Question: " .. a .. " " .. simbol .. " " .. b .. " = ?")
-                    end
-                    
-                    print("[Math] Question: " .. a .. " " .. simbol .. " " .. b .. " = " .. result)
-                    TIMER_ANSWER = 60
-                end
-            end)
 
             -- check if the player is in the game
             if ply:IsPlayer() then
@@ -155,14 +159,14 @@ hook.Add("Think", "Hook-MathAsk", function()
                     ply:ChatPrint(PREFIX .. "Correct!")
 
                     -- send a message to the other players
-                    for k, v in pairs(players) do
+                    for k, v in ipairs(players) do
                         if v != ply then
                             v:ChatPrint(PREFIX .. ply:Name() .. " Answered First!")
                         end
                     end
 
-                    -- start the timer
                     timer.Start("math_ask_timer")
+                    timer.Stop("math_ask_again")
 
                     -- remove the hook
                     hook.Remove("PlayerSay", "Hook-MathAnswer")
