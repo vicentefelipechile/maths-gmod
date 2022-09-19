@@ -36,7 +36,7 @@ CreateConVar("math_mul_max", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}
 CreateConVar("math_div_min", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Min amount to divide", 1, 500)
 CreateConVar("math_div_max", 15, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Max amount to divide", 1, 500)
 
-CreateConVar("math_ask_timer", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "The time between questions in seconds", 15, 600)
+CreateConVar("math_ask_timer", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "The time between questions in seconds", 10, 600)
 CreateConVar("math_sub_minus", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "The result of the subtraction will be negative", 0, 1)
 
 ----------------------------------
