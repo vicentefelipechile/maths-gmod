@@ -152,8 +152,6 @@ function mathQuestion()
         end)
     end
 
-    PrintTable(currentQuestion)
-
     local mType = currentQuestion["1"]
     if mType == "add" or "sub" or "mul"  then
         formula = currentQuestion["3"] .. " " .. currentQuestion["2"] .. " " .. currentQuestion["4"] .. " = "
