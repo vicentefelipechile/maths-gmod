@@ -139,7 +139,6 @@ local function mathQuestion()
         hook.Add("PlayerSay", "mathQuestionAnswered", function(ply, text)
             if IsValid(ply) then
                 if text == currentQuestion["5"] then
-                    currentQuestion = nil
                     timer.Simple(0.1 function()
                         
                         mathAddPoints(ply, 1)
@@ -153,6 +152,7 @@ local function mathQuestion()
                         end
 
                         mathKillTimer()
+                        currentQuestion = nil
                         hook.Remove("PlayerSay", "mathQuestionAnswered")
                     end)
                 end
