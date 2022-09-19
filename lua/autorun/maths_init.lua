@@ -128,12 +128,12 @@ function mathQuestion()
 
     if currentQuestion == nil then
         currentQuestion = mathGetEquation()
-        hook.Run("math_QuestionCreated")
+        hook.Call("math_QuestionCreated", nil, 1)
 
         hook.Add("PlayerSay", "mathQuestionAnswered", function(ply, text)
             if ply:IsPlayer() then
                 if tostring(text) == tostring(currentQuestion["5"]) then
-                    hook.Run("math_QuestionAnswered", ply)
+                    hook.Call("math_QuestionAnswered", nil, ply)
                     timer.Simple(0.01, function()
                         
                         mathAddPoints(ply, 1)
