@@ -31,8 +31,8 @@ CreateConVar("math_add_min", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}
 CreateConVar("math_add_max", 100, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Max amount to add", 1, 500)
 CreateConVar("math_sub_min", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Min amount to subtract", 1, 500)
 CreateConVar("math_sub_max", 100, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Max amount to subtract", 1, 500)
-CreateConVar("math_mult_min", 2, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Min amount to multiply", 1, 500)
-CreateConVar("math_mult_max", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Max amount to multiply", 1, 500)
+CreateConVar("math_mul_min", 2, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Min amount to multiply", 1, 500)
+CreateConVar("math_mul_max", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Max amount to multiply", 1, 500)
 CreateConVar("math_div_min", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Min amount to divide", 1, 500)
 CreateConVar("math_div_max", 15, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Max amount to divide", 1, 500)
 
@@ -66,7 +66,12 @@ end)
 ----------------------------------
 ------------ Functions -----------
 ----------------------------------
-local function mathAddPoints(ply, points)
+if SERVER then
+
+local currentQuestion
+local formula 
+
+function mathAddPoints(ply, points)
     local bPoints = tonumber(sql.QueryValue("SELECT points FROM " .. mathQuestions.db .. " WHERE steamid64 = " .. sql.SQLStr(ply:SteamID64())).points)
     sql.Query("UPDATE " .. mathQuestions.db .. " SET points = points + " .. points .. " WHERE steamid64 = " .. sql.SQLStr(ply:SteamID64()))
 end
@@ -75,15 +80,21 @@ local function tn(v)
     return tonumber(v)
 end
 
-local function mathKillTimer()
+function mathKillTimer()
+    print("Correct!")
     timer.Stop("mathQuestion")
-    timer.Simple(GetConVar("math_ask_timer"):GetInt(), function()
+    hook.Remove("PlayerSay", "mathQuestionAnswered")
+    currentQuestion = nil
+    formula = nil
+
+    timer.Simple(2, function()
+        mathQuestion()
         timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion)
     end)
 end
 
-local function mathGetEquation()
-    local mathType = mathQuestions.math[math.random(1, 4)]
+function mathGetEquation()
+    local mathType = table.Random(mathQuestions.math)
     local a = math.random(GetConVar("math_" .. mathType.type .. "_min"):GetInt(), GetConVar("math_" .. mathType.type .. "_max"):GetInt())
     local b = math.random(GetConVar("math_" .. mathType.type .. "_min"):GetInt(), GetConVar("math_" .. mathType.type .. "_max"):GetInt())
 
@@ -101,45 +112,27 @@ local function mathGetEquation()
         answer = a * b
     elseif mType == "div" then
         answer = a
+        a = a * b
     end
 
     return {
-        ["1"] = tostring(mathType.type),
-        ["2"] = tostring(mathType.simbol),
+        ["1"] = mathType.type,
+        ["2"] = mathType.symbol,
         ["3"] = a,
         ["4"] = b,
         ["5"] = answer
     }
 end
 
-local currentQuestion
-local function mathQuestion()
+function mathQuestion()
+
     if currentQuestion == nil then
         currentQuestion = mathGetEquation()
-    end
 
-    local formula
-
-    local mType = currentQuestion["1"]
-    if mType == ( "add" or "sub" or "mul" ) then
-        formula = currentQuestion["3"] .. " " .. currentQuestion["2"] .. " " .. currentQuestion["4"] .. " = "
-    elseif mType == "div" then
-        formula = (tn(currentQuestion["3"]) * tn(currentQuestion["4"])) .. " " .. currentQuestion["2"] .. " " .. currentQuestion["4"] .. " = "
-    end
-
-    for _, ply in ipairs(player.GetAll()) do
-        ply:ChatPrint("[Math] Question: " .. formula .. "?")
-    end
-
-    if SERVER then
-        print("[Math] Question: " .. formula .. currentQuestion["5"])
-    end
-
-    if currentQuestion == nil then
         hook.Add("PlayerSay", "mathQuestionAnswered", function(ply, text)
-            if IsValid(ply) then
-                if text == currentQuestion["5"] then
-                    timer.Simple(0.1, function()
+            if ply:IsPlayer() then
+                if tostring(text) == tostring(currentQuestion["5"]) then
+                    timer.Simple(0.01, function()
                         
                         mathAddPoints(ply, 1)
 
@@ -152,13 +145,31 @@ local function mathQuestion()
                         end
 
                         mathKillTimer()
-                        currentQuestion = nil
                         hook.Remove("PlayerSay", "mathQuestionAnswered")
                     end)
                 end
             end
         end)
     end
+
+    PrintTable(currentQuestion)
+
+    local mType = currentQuestion["1"]
+    if mType == "add" or "sub" or "mul"  then
+        formula = currentQuestion["3"] .. " " .. currentQuestion["2"] .. " " .. currentQuestion["4"] .. " = "
+    elseif mType == "div" then
+        formula = (tn(currentQuestion["3"]) * tn(currentQuestion["4"])) .. " " .. currentQuestion["2"] .. " " .. currentQuestion["4"] .. " = "
+    end
+
+    for _, ply in ipairs(player.GetAll()) do
+        ply:ChatPrint("[Math] Question: " .. formula .. "?")
+    end
+
+    if SERVER then
+        print("[Math] Question: " .. formula .. currentQuestion["5"])
+    end
 end
 
 timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion)
+
+end
