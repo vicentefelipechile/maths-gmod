@@ -78,7 +78,7 @@ end
 local function mathKillTimer()
     timer.Stop("mathQuestion")
     timer.Simple(GetConVar("math_ask_timer"):GetInt(), function()
-        timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion end)
+        timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion)
     end)
 end
 
@@ -139,7 +139,7 @@ local function mathQuestion()
         hook.Add("PlayerSay", "mathQuestionAnswered", function(ply, text)
             if IsValid(ply) then
                 if text == currentQuestion["5"] then
-                    timer.Simple(0.1 function()
+                    timer.Simple(0.1, function()
                         
                         mathAddPoints(ply, 1)
 
@@ -161,4 +161,4 @@ local function mathQuestion()
     end
 end
 
-timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion end)
+timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion)
