@@ -140,7 +140,7 @@ function mathQuestion()
 
                         for _, sply in ipairs(player.GetAll()) do
                             if ply != sply then
-                                sply:ChatPrint("[Math] " .. sply:Nick() .. " Answered first!")
+                                sply:ChatPrint("[Math] " .. ply:Nick() .. " Answered first!")
                             else
                                 sply:ChatPrint("[Math] Correct!")
                             end
