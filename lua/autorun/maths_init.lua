@@ -72,7 +72,6 @@ local currentQuestion
 local formula 
 
 function mathAddPoints(ply, points)
-    local bPoints = tonumber(sql.QueryValue("SELECT points FROM " .. mathQuestions.db .. " WHERE steamid64 = " .. sql.SQLStr(ply:SteamID64())).points)
     sql.Query("UPDATE " .. mathQuestions.db .. " SET points = points + " .. points .. " WHERE steamid64 = " .. sql.SQLStr(ply:SteamID64()))
 end
 
@@ -97,6 +96,7 @@ function mathGetEquation()
     local mathType = table.Random(mathQuestions.math)
     local a = math.random(GetConVar("math_" .. mathType.type .. "_min"):GetInt(), GetConVar("math_" .. mathType.type .. "_max"):GetInt())
     local b = math.random(GetConVar("math_" .. mathType.type .. "_min"):GetInt(), GetConVar("math_" .. mathType.type .. "_max"):GetInt())
+    local answer
 
     local mType = mathType.type
 
@@ -106,7 +106,10 @@ function mathGetEquation()
         if GetConVar("math_sub_minus"):GetBool() then
             answer = a - b
         else
-            answer = math.max(a, b) - math.min(a, b)
+            local aA, bB = a, b
+            a = math.max(aA, bB)
+            b = math.min(aA, bB)
+            answer = a - b
         end
     elseif mType == "mul" then
         answer = a * b
@@ -128,7 +131,7 @@ function mathQuestion()
 
     if currentQuestion == nil then
         currentQuestion = mathGetEquation()
-        hook.Call("math_QuestionCreated", nil, 1)
+        hook.Call("math_QuestionCreated", nil, currentQuestion["1"], currentQuestion["3"], currentQuestion["4"], currentQuestion["5"])
 
         hook.Add("PlayerSay", "mathQuestionAnswered", function(ply, text)
             if ply:IsPlayer() then
@@ -165,9 +168,7 @@ function mathQuestion()
         ply:ChatPrint("[Math] Question: " .. formula .. "?")
     end
 
-    if SERVER then
-        print("[Math] Question: " .. formula .. currentQuestion["5"])
-    end
+    print("[Math] Question: " .. formula .. currentQuestion["5"])
 end
 
 timer.Create("mathQuestion", GetConVar("math_ask_timer"):GetInt(), 0, mathQuestion)
